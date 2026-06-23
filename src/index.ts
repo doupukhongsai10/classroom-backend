@@ -54,14 +54,25 @@ async function main() {
     console.log('\nCRUD operations completed successfully.');
   } catch (error) {
     console.error('❌ Error performing CRUD operations:', error);
-    process.exit(1);
+    throw error;
   }
 }
 
-main().catch(console.error);
+let server: ReturnType<typeof app.listen>;
 
-const server = app.listen(PORT, () => {
-  console.log(`server is running at http://localhost:${PORT}`);
+async function bootstrap() {
+  await main();
+  server = app.listen(PORT, () => {
+    console.log(`server is running at http://localhost:${PORT}`);
+  });
+}
+
+bootstrap().catch(async (error) => {
+  console.error('Startup failed:', error);
+  if (pool) {
+    await pool.end().catch(() => undefined);
+  }
+  process.exit(1);
 });
 
 // Graceful shutdown
