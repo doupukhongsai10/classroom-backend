@@ -8,6 +8,13 @@
       "when": 1782198434115,
       "tag": "0000_magical_microchip",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1782281717697,
+      "tag": "0001_faulty_micromax",
+      "breakpoints": true
     }
   ]
 }
