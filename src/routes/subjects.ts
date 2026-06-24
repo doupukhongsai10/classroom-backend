@@ -1,7 +1,7 @@
 import express from 'express';
 import { and, desc, eq, getTableColumns, ilike, or, sql } from 'drizzle-orm';
-import { departments, subjects } from '../db/schema/app.js';
-import {db} from "../db/index.js";
+import { departments, subjects } from '../db/schema/index.js';
+import {db} from "../db.js";
 
 const router = express.Router();
 
@@ -9,8 +9,8 @@ router.get("/",async(req,res) => {
   try{
     const { search, department, page=1,limit=10}=req.query;
 
-    const currentPage = Math.max(1, Number(page) || 1);
-    const limitPerPage = Math.max(1, Number(limit) || 10);
+    const currentPage = Math.max(1, +page);
+    const limitPerPage = Math.max(1, +limit);
 
     const offset = (currentPage-1)*limitPerPage;
 
@@ -20,10 +20,10 @@ router.get("/",async(req,res) => {
     if(search){
       filterConditions.push(
         or(
-          ilike(subjects.name, `%${search}%`),
-          ilike(subjects.description, `%${search}%`),
-        ),
-      );
+          ilike(subjects.name, `%${search}`),
+          ilike(subjects.code, `%${search}`)
+        )
+      )
     }
     //if department filter exists, match department name
     if(department){
@@ -34,7 +34,7 @@ router.get("/",async(req,res) => {
     const whereClause = filterConditions.length>0? and(...filterConditions): undefined;
 
     const countResult = await db
-      .select({ count: sql<string>`count(*)`.mapWith(Number)})
+      .select({ count: sql<number>`count(*)`})
       .from(subjects)
       .leftJoin(departments, eq(subjects.departmentId, departments.id))
       .where(whereClause);
