@@ -1,7 +1,7 @@
 import express from 'express';
 import { and, desc, eq, getTableColumns, ilike, or, sql } from 'drizzle-orm';
 import { departments, subjects } from '../db/schema/index.js';
-import {db} from "../db.js";
+import {db} from "../db/index.js";
 
 const router = express.Router();
 
@@ -9,8 +9,11 @@ router.get("/",async(req,res) => {
   try{
     const { search, department, page=1,limit=10}=req.query;
 
-    const currentPage = Math.max(1, +page);
-    const limitPerPage = Math.max(1, +limit);
+    const pageValue = typeof page === 'string' ? parseInt(page, 10) : NaN;
+    const limitValue = typeof limit === 'string' ? parseInt(limit, 10) : NaN;
+
+    const currentPage = Math.max(1, isNaN(pageValue) ? 1 : pageValue);
+    const limitPerPage = Math.max(1, isNaN(limitValue) ? 10 : limitValue);
 
     const offset = (currentPage-1)*limitPerPage;
 
@@ -34,7 +37,7 @@ router.get("/",async(req,res) => {
     const whereClause = filterConditions.length>0? and(...filterConditions): undefined;
 
     const countResult = await db
-      .select({ count: sql<number>`count(*)`})
+      .select({ count: sql<number>`count(*)`.mapWith(Number)})
       .from(subjects)
       .leftJoin(departments, eq(subjects.departmentId, departments.id))
       .where(whereClause);
